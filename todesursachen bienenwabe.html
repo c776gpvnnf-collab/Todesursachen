@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todesursachen · Deutschland</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2ee;
+    --hex-fill: #ffffff;
+    --hex-stroke: #ddd9d2;
+    --hex-hover-fill: #fffdf9;
+    --hex-hover-stroke: #b89d72;
+    --hex-active-fill: #fdf9f2;
+    --hex-active-stroke: #9a7a45;
+    --accent: #7a5a2a;
+    --accent-light: #b89d72;
+    --text-hex-num: #1a1815;
+    --text-hex-label: #5a524a;
+    --text-hex-unit: #9a9390;
+    --text-primary: #1a1815;
+    --text-secondary: #4a4440;
+    --text-muted: #9a9390;
+    --male: #2f6a9a;
+    --female: #9a3a52;
+    --panel-bg: #ffffff;
+    --shadow: 0 8px 48px rgba(60,45,20,0.13), 0 2px 8px rgba(60,45,20,0.07);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header {
+    width: 100%;
+    padding: 52px 0 28px;
+    text-align: center;
+    border-bottom: 1px solid #e2ded8;
+  }
+
+  .eyebrow {
+    font-size: 9.5px;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--accent-light);
+    margin-bottom: 16px;
+    font-weight: 400;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(30px, 4vw, 50px);
+    color: var(--text-primary);
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    margin-top: 13px;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1000px;
+    padding: 52px 24px 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hint {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 44px;
+  }
+
+  .honeycomb-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  svg.honeycomb { overflow: visible; }
+
+  /* ── SVG hex styles ── */
+  .hex-group { cursor: pointer; }
+
+  .hex-bg {
+    fill: var(--hex-fill);
+    stroke: var(--hex-stroke);
+    stroke-width: 1.5;
+    transition: fill 0.2s, stroke 0.2s, filter 0.2s;
+    filter: drop-shadow(0 2px 6px rgba(60,40,10,0.07));
+  }
+
+  .hex-group:hover .hex-bg {
+    fill: var(--hex-hover-fill);
+    stroke: var(--hex-hover-stroke);
+    filter: drop-shadow(0 4px 14px rgba(120,80,20,0.15));
+  }
+
+  .hex-group.active .hex-bg {
+    fill: var(--hex-active-fill);
+    stroke: var(--hex-active-stroke);
+    stroke-width: 2;
+    filter: drop-shadow(0 4px 18px rgba(120,80,20,0.18));
+  }
+
+  .hex-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 22px;
+    fill: var(--text-hex-num);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  .hex-unit {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 7.5px;
+    letter-spacing: 0.1em;
+    fill: var(--text-hex-unit);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  .hex-label {
+    font-family: 'Jost', sans-serif;
+    font-weight: 400;
+    font-size: 8.5px;
+    letter-spacing: 0.08em;
+    fill: var(--text-hex-label);
+    text-anchor: middle;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+
+  .hex-group:hover .hex-label,
+  .hex-group.active .hex-label {
+    fill: var(--accent);
+  }
+
+  /* ── PANEL ── */
+  .panel-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    background: rgba(30,20,10,0.35);
+    backdrop-filter: blur(6px);
+  }
+  .panel-overlay.visible {
+    display: flex;
+    animation: fo 0.18s ease;
+  }
+  @keyframes fo { from{opacity:0} to{opacity:1} }
+
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid #e5e0d8;
+    box-shadow: var(--shadow);
+    max-width: 500px;
+    width: calc(100% - 40px);
+    padding: 44px 44px 38px;
+    position: relative;
+    animation: su 0.26s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes su {
+    from { transform: translateY(18px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .panel-close {
+    position: absolute;
+    top: 16px; right: 18px;
+    background: none; border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 17px;
+    line-height: 1;
+    transition: color 0.15s;
+    font-family: 'Jost', sans-serif;
+  }
+  .panel-close:hover { color: var(--text-primary); }
+
+  .p-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--accent-light);
+    margin-bottom: 10px;
+    font-weight: 400;
+  }
+
+  .p-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 26px;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 18px;
+  }
+
+  .p-divider {
+    width: 28px; height: 1px;
+    background: var(--accent-light);
+    margin-bottom: 18px;
+  }
+
+  .p-def {
+    font-size: 13px;
+    line-height: 1.78;
+    color: var(--text-secondary);
+    font-weight: 300;
+    margin-bottom: 32px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3px;
+  }
+
+  .stat-cell {
+    background: #f8f5f0;
+    padding: 16px 12px 14px;
+    text-align: center;
+    border: 1px solid #ede9e2;
+  }
+
+  .stat-label {
+    display: block;
+    font-size: 8px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-bottom: 9px;
+  }
+
+  .stat-value {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--text-primary);
+  }
+
+  .stat-cell.male  .stat-value { color: var(--male); }
+  .stat-cell.female .stat-value { color: var(--female); }
+
+  .stat-sub {
+    display: block;
+    margin-top: 5px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .bar-wrap {
+    margin-top: 20px;
+    height: 3px;
+    background: #ede9e2;
+    display: flex;
+    overflow: hidden;
+  }
+  .bar-male   { background: var(--male);   transition: width 0.5s ease; }
+  .bar-female { background: var(--female); transition: width 0.5s ease; }
+
+  .bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 7px;
+  }
+  .bar-lbl {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+  .bar-lbl.m { color: var(--male); }
+  .bar-lbl.f { color: var(--female); }
+
+  footer {
+    padding: 22px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    text-align: center;
+    text-transform: uppercase;
+    border-top: 1px solid #e2ded8;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Statistisches Bundesamt · Destatis</p>
+  <h1>Woran <em>sterben</em> wir?</h1>
+  <p class="subtitle">Gestorbene nach Todesursache und Geschlecht · Deutschland</p>
+</header>
+
+<main>
+  <p class="hint">Kachel antippen für Details</p>
+  <div class="honeycomb-wrap">
+    <svg class="honeycomb" id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+</main>
+
+<div class="panel-overlay" id="overlay">
+  <div class="panel">
+    <button class="panel-close" id="closeBtn">✕</button>
+    <p class="p-eyebrow" id="p-code"></p>
+    <h2 class="p-title" id="p-title"></h2>
+    <div class="p-divider"></div>
+    <p class="p-def" id="p-def"></p>
+    <div class="stats-grid">
+      <div class="stat-cell total">
+        <span class="stat-label">Insgesamt</span>
+        <span class="stat-value" id="p-total"></span>
+        <span class="stat-sub">Gestorbene</span>
+      </div>
+      <div class="stat-cell male">
+        <span class="stat-label">Männer</span>
+        <span class="stat-value" id="p-male"></span>
+        <span class="stat-sub" id="p-mpct"></span>
+      </div>
+      <div class="stat-cell female">
+        <span class="stat-label">Frauen</span>
+        <span class="stat-value" id="p-female"></span>
+        <span class="stat-sub" id="p-fpct"></span>
+      </div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-male"   id="bar-m" style="width:50%"></div>
+      <div class="bar-female" id="bar-f" style="width:50%"></div>
+    </div>
+    <div class="bar-labels">
+      <span class="bar-lbl m" id="bl-m"></span>
+      <span class="bar-lbl f" id="bl-f"></span>
+    </div>
+  </div>
+</div>
+
+<footer>Datenquelle: Destatis · Todesursachenstatistik</footer>
+
+<script>
+const DATA = [
+  { code:"TDU-07", name:"Krankheiten des Kreislaufsystems",  short:["Kreislauf-","system"],        total:339212, male:160470, female:178742,
+    def:"Erkrankungen des Herzens und der Blutgefäße – darunter Herzinfarkt, Herzinsuffizienz, Schlaganfall und arterielle Hypertonie. Sie sind die häufigste Todesursache in Deutschland und betreffen beide Geschlechter nahezu gleich stark, mit einem leichten Überhang bei Frauen aufgrund ihrer höheren Lebenserwartung." },
+  { code:"TDU-02", name:"Neubildungen",                       short:["Krebs &","Tumoren"],           total:238388, male:127577, female:110811,
+    def:"Bösartige und gutartige Tumorerkrankungen, umgangssprachlich als Krebs bekannt. Hierzu zählen Lungen-, Darm-, Brust- und Prostatakrebs. Männer sterben häufiger an Neubildungen als Frauen, was auf unterschiedliche Risikofaktoren und Vorsorgemuster zurückzuführen ist." },
+  { code:"TDU-08", name:"Krankheiten des Atmungssystems",     short:["Atemwegs-","erkrankungen"],    total:75117,  male:40150,  female:34967,
+    def:"Erkrankungen der Lunge und der Atemwege, darunter chronisch-obstruktive Lungenerkrankung (COPD), Pneumonie und Asthma. Männer sind häufiger betroffen, was historisch auf höhere Rauch- und Schadstoffexposition zurückgeführt wird." },
+  { code:"TDU-05", name:"Psychische und Verhaltensstörungen", short:["Psychische","Störungen"],      total:72181,  male:28131,  female:44050,
+    def:"Todesfälle infolge von Demenz, Suchterkrankungen und anderen psychiatrischen Erkrankungen. Frauen sind deutlich häufiger betroffen, hauptsächlich bedingt durch die höhere Prävalenz von Demenzerkrankungen im hohen Lebensalter." },
+  { code:"TDU-06", name:"Krankheiten des Nervensystems",      short:["Nerven-","system"],            total:39528,  male:19830,  female:19698,
+    def:"Erkrankungen wie Parkinson, Multiple Sklerose und andere neurodegenerative Leiden. Die Verteilung zwischen den Geschlechtern ist nahezu ausgeglichen, wobei bestimmte Erkrankungen wie Parkinson häufiger Männer betreffen." },
+  { code:"TDU-04", name:"Endokrine & Stoffwechselkrankheiten",short:["Stoffwechsel-","erkrankungen"],total:39300,  male:18269,  female:21031,
+    def:"Erkrankungen des Hormonsystems und Stoffwechsels, darunter Diabetes mellitus als häufigste Todesursache. Frauen sterben etwas häufiger daran, bedingt durch eine höhere Lebenserwartung und damit verbundene Komorbiditäten." },
+  { code:"TDU-17", name:"Äußere Ursachen",                    short:["Äußere","Ursachen"],           total:48908,  male:27924,  female:20984,
+    def:"Todesfälle durch Unfälle, Stürze, Vergiftungen, Suizide und andere äußere Einwirkungen. Männer sind überproportional häufig betroffen, sowohl durch Berufs- und Verkehrsunfälle als auch durch eine höhere Suizidrate." },
+  { code:"TDU-09", name:"Krankheiten des Verdauungssystems",  short:["Verdauungs-","system"],        total:45362,  male:24222,  female:21140,
+    def:"Erkrankungen von Magen, Leber, Darm und Gallenblase, darunter Leberzirrhose und chronische Pankreatitis. Männer sterben häufiger daran, was mit höherem Alkoholkonsum und späterem Behandlungsbeginn zusammenhängt." },
+  { code:"TDU-12", name:"Krankheiten des Urogenitalsystems",  short:["Urogenital-","system"],        total:28869,  male:13535,  female:15334,
+    def:"Erkrankungen der Nieren, Harnwege und Geschlechtsorgane, insbesondere chronische Niereninsuffizienz. Frauen sind aufgrund anatomischer Besonderheiten und hormoneller Faktoren im Alter häufiger betroffen." },
+  { code:"TDU-16", name:"Symptome & Laborbefunde",            short:["Symptome &","Befunde"],        total:31345,  male:18211,  female:13134,
+    def:"Todesfälle, bei denen keine spezifische Grunderkrankung kodiert werden konnte – etwa Herzstillstand ohne gesicherte Ursache. Diese Kategorie erfasst vor allem Sterbefälle im hohen Alter mit unklarem klinischem Bild." }
+];
+
+function fmt(n)  { return n.toLocaleString('de-DE'); }
+function fmtK(n) { return n>=100000 ? (n/1000).toFixed(0)+'T' : (n/1000).toFixed(1)+'T'; }
+
+// ── Circular honeycomb: pointy-top hexagons, layout ring around center ──
+// 10 hexes arranged roughly circular: 1 center + 6 inner ring + 3 extra
+// Better: classic offset grid shaped into a circle-ish blob
+// Use a 3-4-3 arrangement (pointy-top, rows)
+
+const R = 80;
+const gap = 3;
+const HEX_W = Math.sqrt(3) * R;   // pointy-top: width = sqrt3*R
+const HEX_H = 2 * R;              // height = 2R
+const rowH  = HEX_H * 0.75 + gap; // vertical step
+
+// 3 rows: [3, 4, 3]  → offset pattern makes it round
+// Row offsets (horizontal) so it looks centered and round:
+// row 0 (3 cells): offset +HEX_W/2  (starts half-cell in)
+// row 1 (4 cells): offset 0
+// row 2 (3 cells): offset +HEX_W/2
+
+const rows = [
+  { count:3, offset: HEX_W/2, indices:[0,1,2] },
+  { count:4, offset: 0,       indices:[3,4,5,6] },
+  { count:3, offset: HEX_W/2, indices:[7,8,9] }
+];
+
+const positions = new Array(10);
+rows.forEach((row, ri) => {
+  row.indices.forEach((idx, ci) => {
+    positions[idx] = {
+      x: row.offset + ci * (HEX_W + gap),
+      y: ri * rowH
+    };
+  });
+});
+
+const xs = positions.map(p=>p.x), ys = positions.map(p=>p.y);
+const minX=Math.min(...xs), maxX=Math.max(...xs);
+const minY=Math.min(...ys), maxY=Math.max(...ys);
+const pad = R + 10;
+const svgW = (maxX - minX) + HEX_W + pad*2;
+const svgH = (maxY - minY) + HEX_H + pad*2;
+
+const svgEl = document.getElementById('svg');
+svgEl.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+const maxW = Math.min(svgW, 860);
+svgEl.setAttribute('width',  maxW);
+svgEl.setAttribute('height', svgH * maxW / svgW);
+
+// Pointy-top hexagon path
+function hexPath(cx, cy, r) {
+  const pts = [];
+  for (let i=0; i<6; i++) {
+    const a = Math.PI/180 * (60*i + 30); // +30° for pointy-top
+    pts.push(`${cx + r*Math.cos(a)},${cy + r*Math.sin(a)}`);
+  }
+  return 'M'+pts.join('L')+'Z';
+}
+
+DATA.forEach((d, i) => {
+  const raw = positions[i];
+  const cx = (raw.x - minX) + HEX_W/2 + pad;
+  const cy = (raw.y - minY) + HEX_H/2 + pad;
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('class','hex-group');
+
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','path');
+  bg.setAttribute('class','hex-bg');
+  bg.setAttribute('d', hexPath(cx, cy, R-1));
+  g.appendChild(bg);
+
+  // Number (large)
+  const num = document.createElementNS('http://www.w3.org/2000/svg','text');
+  num.setAttribute('class','hex-num');
+  num.setAttribute('x', cx);
+  num.setAttribute('y', cy - 8);
+  num.textContent = fmtK(d.total);
+  g.appendChild(num);
+
+  // unit
+  const unit = document.createElementNS('http://www.w3.org/2000/svg','text');
+  unit.setAttribute('class','hex-unit');
+  unit.setAttribute('x', cx);
+  unit.setAttribute('y', cy + 9);
+  unit.textContent = 'Gestorbene';
+  g.appendChild(unit);
+
+  // label lines
+  d.short.forEach((line, li) => {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('class','hex-label');
+    t.setAttribute('x', cx);
+    t.setAttribute('y', cy + 27 + li*13);
+    t.textContent = line;
+    g.appendChild(t);
+  });
+
+  g.addEventListener('click', () => openPanel(i, g));
+  svgEl.appendChild(g);
+});
+
+const overlay = document.getElementById('overlay');
+
+function openPanel(i, gEl) {
+  document.querySelectorAll('.hex-group.active').forEach(el=>el.classList.remove('active'));
+  gEl.classList.add('active');
+  const d = DATA[i];
+  const mp = (d.male/d.total*100).toFixed(1);
+  const fp = (d.female/d.total*100).toFixed(1);
+  document.getElementById('p-code').textContent   = d.code;
+  document.getElementById('p-title').textContent  = d.name;
+  document.getElementById('p-def').textContent    = d.def;
+  document.getElementById('p-total').textContent  = fmt(d.total);
+  document.getElementById('p-male').textContent   = fmt(d.male);
+  document.getElementById('p-female').textContent = fmt(d.female);
+  document.getElementById('p-mpct').textContent   = mp + ' %';
+  document.getElementById('p-fpct').textContent   = fp + ' %';
+  document.getElementById('bar-m').style.width    = mp + '%';
+  document.getElementById('bar-f').style.width    = fp + '%';
+  document.getElementById('bl-m').textContent     = '♂ ' + mp + ' %';
+  document.getElementById('bl-f').textContent     = fp + ' % ♀';
+  overlay.classList.add('visible');
+}
+
+function closePanel() {
+  overlay.classList.remove('visible');
+  document.querySelectorAll('.hex-group.active').forEach(el=>el.classList.remove('active'));
+}
+
+document.getElementById('closeBtn').addEventListener('click', closePanel);
+overlay.addEventListener('click', e => { if(e.target===overlay) closePanel(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closePanel(); });
+</script>
+</body>
+</html>
